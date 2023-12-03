@@ -1,4 +1,4 @@
-from main import part1, part2, parse_game, Set, Game, is_set_possible, is_game_possible
+from main import part1, part2, parse_game, Set, Game, is_set_possible, is_game_possible, get_power
 
 filename = "example.txt"
 
@@ -20,7 +20,7 @@ def test_part2():
     # When
     result = part2(lines)
     # Then
-    assert result == 0
+    assert result == 2286
 
 
 def test_parse_game():
@@ -101,3 +101,21 @@ def test_is_game_possible_false():
     result = is_game_possible(game)
     # Then
     assert result is False
+
+
+def test_get_power():
+    # Given
+    set1 = Set()
+    set1.red = 4
+    set1.blue = 3
+    set2 = Set()
+    set2.red = 1
+    set2.green = 2
+    set2.blue = 6
+    set3 = Set()
+    set3.green = 2
+    game = Game(1, [set1, set2, set3])
+    # When
+    result = get_power(game)
+    # Then
+    assert result == 48

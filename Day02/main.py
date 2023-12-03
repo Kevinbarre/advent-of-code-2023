@@ -9,7 +9,8 @@ def part1(lines):
 
 
 def part2(lines):
-    return 0
+    games = [parse_game(line) for line in lines]
+    return sum(get_power(game) for game in games)
 
 
 class Game:
@@ -49,6 +50,20 @@ def is_set_possible(set):
 
 def is_game_possible(game):
     return all(is_set_possible(game_set) for game_set in game.sets)
+
+
+def get_power(game):
+    min_red = 0
+    min_green = 0
+    min_blue = 0
+    for game_set in game.sets:
+        if game_set.red > min_red:
+            min_red = game_set.red
+        if game_set.green > min_green:
+            min_green = game_set.green
+        if game_set.blue > min_blue:
+            min_blue = game_set.blue
+    return min_red * min_blue * min_green
 
 
 if __name__ == '__main__':
