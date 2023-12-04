@@ -1,9 +1,12 @@
+from math import prod
+
+
 def part1(lines):
     return sum(find_part_numbers(lines))
 
 
 def part2(lines):
-    return 0
+    return sum(find_gear_ratios(lines))
 
 
 def find_part_numbers(rows):
@@ -90,6 +93,107 @@ def is_part_number(j, start_index, end_index, rows):
 
 def is_symbol(current_char):
     return not current_char.isdigit() and current_char != '.'
+
+
+def is_gear_symbol(current_char):
+    return current_char == '*'
+
+
+def is_gear(j, i, rows):
+    part_numbers = []
+    # Check on left
+    if i != 0:
+        current_char = rows[j][i - 1]
+        if current_char.isdigit():
+            # Found a digit directly left
+            part_numbers.append(get_part_number(rows[j], i - 1))
+
+    # Check on right
+    if i != len(rows[0]) - 1:
+        current_char = rows[j][i + 1]
+        if current_char.isdigit():
+            # Found a digit directly left
+            part_numbers.append(get_part_number(rows[j], i + 1))
+
+    if j > 0:
+        # Not on first row, can check above
+        # Check on top
+        current_char = rows[j - 1][i]
+        if current_char.isdigit():
+            # Found a digit directly above, can't have two numbers separated by a symbol
+            part_numbers.append(get_part_number(rows[j - 1], i))
+        else:
+            # Check on top-left
+            current_char = rows[j - 1][i - 1]
+            if current_char.isdigit():
+                # Found a digit on top-left, get corresponding number
+                part_numbers.append(get_part_number(rows[j - 1], i - 1))
+            # Check on top-right
+            current_char = rows[j - 1][i + 1]
+            if current_char.isdigit():
+                # Found a digit on top-right, get corresponding number
+                part_numbers.append(get_part_number(rows[j - 1], i + 1))
+
+    if j < len(rows) - 1:
+        # Not on last row, can check below
+        # Check on down
+        current_char = rows[j + 1][i]
+        if current_char.isdigit():
+            # Found a digit directly below, can't have two numbers separated by a symbol
+            part_numbers.append(get_part_number(rows[j + 1], i))
+        else:
+            # Check on down-left
+            current_char = rows[j + 1][i - 1]
+            if current_char.isdigit():
+                # Found a digit on down-left, get corresponding number
+                part_numbers.append(get_part_number(rows[j + 1], i - 1))
+            # Check on top-right
+            current_char = rows[j + 1][i + 1]
+            if current_char.isdigit():
+                # Found a digit on down-right, get corresponding number
+                part_numbers.append(get_part_number(rows[j + 1], i + 1))
+
+    if len(part_numbers) == 2:
+        return prod(part_numbers)
+    return False
+
+
+def get_part_number(row, i):
+    # Left digits
+    left_digits = ""
+    k = i - 1
+    while k >= 0:
+        current_char = row[k]
+        if not current_char.isdigit():
+            break
+        left_digits += current_char
+        k -= 1
+    # Reverse digits as they've been added from right to left
+    left_digits = left_digits[::-1]
+
+    # Right digits
+    right_digits = ""
+    k = i + 1
+    while k < len(row):
+        current_char = row[k]
+        if not current_char.isdigit():
+            break
+        right_digits += current_char
+        k += 1
+
+    return int(left_digits + row[i] + right_digits)
+
+
+def find_gear_ratios(rows):
+    gear_ratios = []
+    for j in range(len(rows)):
+        for i in range(len(rows[0])):
+            current_char = rows[j][i]
+            if is_gear_symbol(current_char):
+                gear_ratio = is_gear(j, i, rows)
+                if gear_ratio:
+                    gear_ratios.append(gear_ratio)
+    return gear_ratios
 
 
 if __name__ == '__main__':
