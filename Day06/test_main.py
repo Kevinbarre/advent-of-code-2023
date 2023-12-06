@@ -1,6 +1,6 @@
 import pytest
 
-from main import part1, part2, parse_races, get_number_ways
+from main import part1, part2, parse_races, get_number_ways, parse_single_race
 
 filename = "example.txt"
 
@@ -22,7 +22,7 @@ def test_part2():
     # When
     result = part2(lines)
     # Then
-    assert result == 0
+    assert result == 71503
 
 
 def test_parse_races():
@@ -33,6 +33,15 @@ def test_parse_races():
     # Then
     assert len(result) == 3
     assert result == [(7, 9), (15, 40), (30, 200)]
+
+
+def test_parse_single_race():
+    # Given
+    lines = ["Time:      7  15   30", "Distance:  9  40  200"]
+    # When
+    result = parse_single_race(lines)
+    # Then
+    assert result == (71530, 940200)
 
 
 # Speed for Time=7

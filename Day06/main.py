@@ -7,7 +7,8 @@ def part1(lines):
 
 
 def part2(lines):
-    return 0
+    race = parse_single_race(lines)
+    return get_number_ways(*race)
 
 
 def parse_races(lines):
@@ -17,6 +18,15 @@ def parse_races(lines):
     _, raw_distances = raw_distances.split(":")
     distances = [int(distance) for distance in raw_distances.split()]
     return list(zip(times, distances))
+
+
+def parse_single_race(lines):
+    raw_time, raw_distance = lines
+    _, raw_time = raw_time.split(":")
+    time = int(raw_time.replace(" ", ""))
+    _, raw_distance = raw_distance.split(":")
+    distance = int(raw_distance.replace(" ", ""))
+    return time, distance
 
 
 def get_number_ways(time, distance):
