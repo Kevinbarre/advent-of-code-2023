@@ -1,4 +1,5 @@
 from collections import Counter
+from functools import cmp_to_key
 
 CARD_VALUE = {
     '2': 2,
@@ -16,14 +17,31 @@ CARD_VALUE = {
     'A': 14
 }
 
+CARD_VALUE_JOKER = {
+    'J': 1,
+    '2': 2,
+    '3': 3,
+    '4': 4,
+    '5': 5,
+    '6': 6,
+    '7': 7,
+    '8': 8,
+    '9': 9,
+    'T': 10,
+    'Q': 12,
+    'K': 13,
+    'A': 14
+}
+
 
 def part1(lines):
     hands = parse_hands(lines)
-    return get_total_winnings(hands)
+    return get_total_winnings(hands, Counter, CARD_VALUE)
 
 
 def part2(lines):
-    return 0
+    hands = parse_hands(lines)
+    return get_total_winnings(hands, get_counter_added_joker, CARD_VALUE_JOKER)
 
 
 class Hand:
@@ -37,19 +55,31 @@ class Hand:
     def __eq__(self, other):
         return self.cards == other.cards and self.bid == other.bid
 
-    def __lt__(self, other):
-        self_cards_occurrence = sorted(Counter(self.cards).values(), reverse=True)
-        other_cards_occurrence = sorted(Counter(other.cards).values(), reverse=True)
-        # Compare types first
-        for self_nb, other_nb in zip(self_cards_occurrence, other_cards_occurrence):
-            if self_nb != other_nb:
-                return self_nb < other_nb
-        # Same hand type, compare by cards order
-        for self_card, other_card in zip(self.cards, other.cards):
-            self_card_value = CARD_VALUE[self_card]
-            other_card_value = CARD_VALUE[other_card]
-            if self_card_value != other_card_value:
-                return self_card_value < other_card_value
+
+def compare_hands(hand1, hand2, get_counter, card_value):
+    hand1_cards_occurrence = sorted(get_counter(hand1.cards).values(), reverse=True)
+    hand2_cards_occurrence = sorted(get_counter(hand2.cards).values(), reverse=True)
+    # Compare types first
+    for hand1_nb, hand2_nb in zip(hand1_cards_occurrence, hand2_cards_occurrence):
+        if hand1_nb != hand2_nb:
+            return hand1_nb - hand2_nb
+    # Same hand type, compare by cards order
+    for hand1_card, hand2_card in zip(hand1.cards, hand2.cards):
+        hand1_card_value = card_value[hand1_card]
+        hand2_card_value = card_value[hand2_card]
+        if hand1_card_value != hand2_card_value:
+            return hand1_card_value - hand2_card_value
+
+
+def get_counter_added_joker(cards):
+    counter = Counter(cards)
+    if 'J' in counter:
+        nb_joker = counter['J']
+        if nb_joker != 5:  # Handle case when cards are Five of a kind of jokers
+            del counter['J']
+            biggest = max(counter, key=counter.get)
+            counter[biggest] += nb_joker
+    return counter
 
 
 def parse_hands(lines):
@@ -60,8 +90,8 @@ def parse_hands(lines):
     return hands
 
 
-def get_total_winnings(hands):
-    hands.sort()
+def get_total_winnings(hands, get_counter, card_value):
+    hands.sort(key=cmp_to_key(lambda hand1, hand2: compare_hands(hand1, hand2, get_counter, card_value)))
     return sum((i + 1) * hand.bid for i, hand in enumerate(hands))
 
 
