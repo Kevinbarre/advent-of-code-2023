@@ -1,4 +1,5 @@
 import itertools
+from math import lcm
 
 
 def part1(lines):
@@ -7,7 +8,8 @@ def part1(lines):
 
 
 def part2(lines):
-    return 0
+    instructions, maps = parse_input(lines)
+    return reach_all_z(instructions, maps)
 
 
 def parse_input(lines):
@@ -36,6 +38,26 @@ def reach_zzz(instructions, maps):
         current_position = apply_instruction(next(infinite_instructions), current_position, maps)
         steps += 1
     return steps
+
+
+def get_starting_nodes(maps):
+    return [amap for amap in maps.keys() if amap.endswith("A")]
+
+
+def reach_any_z_from_position(position, instructions, maps):
+    current_position = position
+    infinite_instructions = itertools.cycle(instructions)
+    steps = 0
+    while not current_position.endswith("Z"):
+        current_position = apply_instruction(next(infinite_instructions), current_position, maps)
+        steps += 1
+    return steps
+
+
+def reach_all_z(instructions, maps):
+    current_positions = get_starting_nodes(maps)
+    all_steps = [reach_any_z_from_position(position, instructions, maps) for position in current_positions]
+    return lcm(*all_steps)
 
 
 if __name__ == '__main__':
