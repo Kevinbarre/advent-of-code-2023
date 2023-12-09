@@ -4,7 +4,8 @@ def part1(lines):
 
 
 def part2(lines):
-    return 0
+    sequences = parse_sequences(lines)
+    return sum(get_previous_value(sequence) for sequence in sequences)
 
 
 def parse_sequences(lines):
@@ -27,6 +28,11 @@ def get_all_differences(sequence):
 def get_next_value(sequence):
     all_differences = get_all_differences(sequence)
     return sequence[-1] + sum(differences[-1] for differences in all_differences)
+
+
+def get_previous_value(sequence):
+    all_differences = get_all_differences(sequence)
+    return sequence[0] - sum(differences[0] * ((-1) ** i) for i, differences in enumerate(all_differences))
 
 
 if __name__ == '__main__':

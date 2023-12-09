@@ -1,4 +1,7 @@
-from main import part1, part2, parse_sequences, compute_differences, get_all_differences, get_next_value
+import pytest
+
+from main import part1, part2, parse_sequences, compute_differences, get_all_differences, get_next_value, \
+    get_previous_value
 
 filename = "example.txt"
 
@@ -20,7 +23,7 @@ def test_part2():
     # When
     result = part2(lines)
     # Then
-    assert result == 0
+    assert result == 2
 
 
 def test_parse_sequences():
@@ -57,3 +60,13 @@ def test_get_next_value():
     result = get_next_value(sequence)
     # Then
     assert result == 68
+
+
+@pytest.mark.parametrize("test_input, expected",
+                         [([0, 3, 6, 9, 12, 15], -3), ([1, 3, 6, 10, 15, 21], 0), ([10, 13, 16, 21, 30, 45], 5)])
+def test_get_previous_value(test_input, expected):
+    # Given
+    # When
+    result = get_previous_value(test_input)
+    # Then
+    assert result == expected
