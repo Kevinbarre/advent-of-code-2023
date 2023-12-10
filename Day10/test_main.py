@@ -1,6 +1,7 @@
 import pytest
 
-from main import part1, part2, parse_tiles, get_start_position, find_connected_pipes, navigate, get_farthest_distance
+from main import part1, part2, parse_tiles, get_start_position, find_connected_pipes, navigate, get_farthest_distance, \
+    get_loop_positions, count_inside_loop, find_start_symbol
 
 filename = "example.txt"
 
@@ -16,14 +17,17 @@ def test_part1(test_input, expected):
     assert result == expected
 
 
-def test_part2():
+@pytest.mark.parametrize("test_input, expected",
+                         [(filename, 1), ("example2.txt", 1), ("example3.txt", 4), ("example4.txt", 8),
+                          ("example5.txt", 10)])
+def test_part2(test_input, expected):
     # Given
-    with open(filename) as f:
+    with open(test_input) as f:
         lines = f.read().splitlines()
     # When
     result = part2(lines)
     # Then
-    assert result == 0
+    assert result == expected
 
 
 def test_parse_tiles():
@@ -84,5 +88,59 @@ def test_get_farthest_distance(test_input, expected):
     tiles = test_input
     # When
     result = get_farthest_distance(tiles)
+    # Then
+    assert result == expected
+
+
+def test_get_loop_positions():
+    # Given
+    tiles = [".......", ".-L|F7.", ".7S-7|.", ".L|7||.", ".-L-J|.", ".L|-JF.", "......."]
+    # When
+    result = get_loop_positions(tiles)
+    # Then
+    assert result == {(2, 2), (2, 3), (2, 4), (3, 4), (4, 4), (4, 3), (4, 2), (3, 2)}
+
+
+@pytest.mark.parametrize("test_input, expected",
+                         [([".....", ".S-7.", ".|.|.", ".L-J.", "....."], 'F'),
+                          ([".....", ".FS7.", ".|.|.", ".L-J.", "....."], '-'),
+                          ([".....", ".F-S.", ".|.|.", ".L-J.", "....."], '7'),
+                          ([".....", ".F-7.", ".|.S.", ".L-J.", "....."], '|'),
+                          ([".....", ".F-7.", ".|.|.", ".L-S.", "....."], 'J'),
+                          ([".....", ".F-7.", ".|.|.", ".LSJ.", "....."], '-'),
+                          ([".....", ".F-7.", ".|.|.", ".S-J.", "....."], 'L'),
+                          ([".....", ".F-7.", ".S.|.", ".L-J.", "....."], '|')])
+def test_find_start_symbol(test_input, expected):
+    # Given
+    # When
+    result = find_start_symbol(test_input)
+    # Then
+    assert result == expected
+
+
+@pytest.mark.parametrize("test_input, expected",
+                         [(["...........",
+                            ".S-------7.",
+                            ".|F-----7|.",
+                            ".||.....||.",
+                            ".||.....||.",
+                            ".|L-7.F-J|.",
+                            ".|..|.|..|.",
+                            ".L--J.L--J.",
+                            "..........."], 4),
+                          ([".F----7F7F7F7F-7....",
+                            ".|F--7||||||||FJ....",
+                            ".||.FJ||||||||L7....",
+                            "FJL7L7LJLJ||LJ.L-7..",
+                            "L--J.L7...LJS7F-7L7.",
+                            "....F-J..F7FJ|L7L7L7",
+                            "....L7.F7||L7|.L7L7|",
+                            ".....|FJLJ|FJ|F7|.LJ",
+                            "....FJL-7.||.||||...",
+                            "....L---J.LJ.LJLJ..."], 8)])
+def test_count_inside_loop(test_input, expected):
+    # Given
+    # When
+    result = count_inside_loop(test_input)
     # Then
     assert result == expected
