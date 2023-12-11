@@ -1,6 +1,7 @@
 import pytest
 
-from main import part1, part2, expand_space, find_galaxies, get_shortest_distance
+from main import part1, part2, expand_space, find_galaxies, get_shortest_distance, get_shortest_distance_with_expansion, \
+    get_expanded_rows_columns
 
 filename = "example.txt"
 
@@ -15,14 +16,15 @@ def test_part1():
     assert result == 374
 
 
-def test_part2():
+@pytest.mark.parametrize("nb_expansions, expected", [(1, 374), (9, 1030), (99, 8410)])
+def test_part2(nb_expansions, expected):
     # Given
     with open(filename) as f:
         lines = f.read().splitlines()
     # When
-    result = part2(lines)
+    result = part2(lines, nb_expansions)
     # Then
-    assert result == 0
+    assert result == expected
 
 
 def test_expand_space():
@@ -85,3 +87,38 @@ def test_get_shortest_distance(first, second, expected):
     result = get_shortest_distance(first, second)
     # Then
     assert result == expected
+
+
+@pytest.mark.parametrize("first, second, expected",
+                         [((5, 1), (9, 4), 9),
+                          ((0, 3), (8, 7), 15),
+                          ((2, 0), (6, 9), 17),
+                          ((9, 0), (9, 4), 5)])
+def test_get_shortest_distance_with_expansion(first, second, expected):
+    # Given
+    nb_expansions = 1
+    expanded_rows = [3, 7]
+    expanded_columns = [2, 5, 8]
+    # When
+    result = get_shortest_distance_with_expansion(first, second, nb_expansions, expanded_rows, expanded_columns)
+    # Then
+    assert result == expected
+
+
+def test_get_expanded_rows_columns():
+    # Given
+    image = ["...#......",
+             ".......#..",
+             "#.........",
+             "..........",
+             "......#...",
+             ".#........",
+             ".........#",
+             "..........",
+             ".......#..",
+             "#...#....."]
+    # When
+    expanded_rows, expanded_columns = get_expanded_rows_columns(image)
+    # Then
+    assert expanded_rows == [3, 7]
+    assert expanded_columns == [2, 5, 8]
