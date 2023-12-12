@@ -1,21 +1,34 @@
+from functools import cache
+
+
 def part1(lines):
     records = parse_input(lines)
     return sum(count_arrangements(conditions, groups) for conditions, groups in records)
 
 
 def part2(lines):
-    return 0
+    records = parse_input(lines)
+    records = [unfold(record) for record in records]
+    return sum(count_arrangements(conditions, groups) for conditions, groups in records)
 
 
 def parse_input(lines):
     records = []
     for line in lines:
         conditions, raw_groups = line.split()
-        groups = list(map(int, (raw_groups.split(","))))
+        groups = tuple(map(int, (raw_groups.split(","))))
         records.append((conditions, groups))
     return records
 
 
+def unfold(record):
+    conditions, groups = record
+    new_conditions = "?".join(conditions for _ in range(5))
+    new_groups = groups * 5
+    return new_conditions, new_groups
+
+
+@cache
 def count_arrangements(conditions, groups):
     # Empty conditions
     if len(conditions) == 0:
