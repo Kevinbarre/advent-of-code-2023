@@ -1,7 +1,7 @@
 import pytest
 
 from main import part1, part2, parse_patterns, find_distinct_rows, count_columns_before_horizontal_reflection, \
-    transpose_pattern, get_summary
+    transpose_pattern, get_summary, find_smudge, fix_smudge
 
 filename = "example.txt"
 
@@ -23,7 +23,7 @@ def test_part2():
     # When
     result = part2(lines)
     # Then
-    assert result == 0
+    assert result == 400
 
 
 def test_parse_patterns():
@@ -88,7 +88,7 @@ def test_find_horizontal_reflection():
                      "..##..###": [2, 5],
                      "#####.##.": [3, 4]}
     # When
-    result = count_columns_before_horizontal_reflection(distinct_rows)
+    result = count_columns_before_horizontal_reflection(distinct_rows, None)
     # Then
     assert result == 4
 
@@ -101,7 +101,7 @@ def test_do_not_find_horizontal_reflection():
                      '..##..##.': [5],
                      '#.#.##.#.': [6]}
     # When
-    result = count_columns_before_horizontal_reflection(distinct_rows)
+    result = count_columns_before_horizontal_reflection(distinct_rows, None)
     # Then
     assert result == 0
 
@@ -222,10 +222,102 @@ def test_transpose_pattern():
                                                     '###.##.',
                                                     '###.##.',
                                                     '##.####',
-                                                    '..#####'], 1)])
+                                                    '..#####'], 1),
+                                                  (['##.#.#.',
+                                                    '#...##.',
+                                                    '..##.##',
+                                                    '..##.#.',
+                                                    '#...##.',
+                                                    '#..#..#',
+                                                    '#..#.##',
+                                                    '#..#.##',
+                                                    '#..#..#',
+                                                    '#...##.',
+                                                    '..##.##',
+                                                    '..##.##',
+                                                    '#...##.'], 1100)])
 def test_get_summary(test_input, expected):
     # Given
     # When
     result = get_summary(test_input)
+    # Then
+    assert result == expected
+
+
+@pytest.mark.parametrize("j, i, expected", [(0, 0, ["..##..##.",
+                                                    "..#.##.#.",
+                                                    "##......#",
+                                                    "##......#",
+                                                    "..#.##.#.",
+                                                    "..##..##.",
+                                                    "#.#.##.#."]),
+                                            (0, 1, ["####..##.",
+                                                    "..#.##.#.",
+                                                    "##......#",
+                                                    "##......#",
+                                                    "..#.##.#.",
+                                                    "..##..##.",
+                                                    "#.#.##.#."])])
+def test_fix_smudge(j, i, expected):
+    # Given
+    pattern = ["#.##..##.",
+               "..#.##.#.",
+               "##......#",
+               "##......#",
+               "..#.##.#.",
+               "..##..##.",
+               "#.#.##.#."]
+    # When
+    result = fix_smudge(pattern, j, i)
+    # Then
+    assert result == expected
+
+
+@pytest.mark.parametrize("test_input, expected", [(["#.##..##.",
+                                                    "..#.##.#.",
+                                                    "##......#",
+                                                    "##......#",
+                                                    "..#.##.#.",
+                                                    "..##..##.",
+                                                    "#.#.##.#."], 300),
+                                                  (["#...##..#",
+                                                    "#....#..#",
+                                                    "..##..###",
+                                                    "#####.##.",
+                                                    "#####.##.",
+                                                    "..##..###",
+                                                    "#....#..#"], 100),
+                                                  (['.#.##.#.#######',
+                                                    '...##....######',
+                                                    '##....##..#.##.',
+                                                    '.##..##....#..#',
+                                                    '#..##..#.#.....',
+                                                    '#......#.#.#..#',
+                                                    '##....##..#....',
+                                                    '#.#..#.#.##.##.',
+                                                    '##.##.##..#.##.',
+                                                    '########.#....#',
+                                                    '..#..#..####..#',
+                                                    '#.#..#.#.#.####',
+                                                    '#..##..##...##.',
+                                                    '#......###.#..#',
+                                                    '#......##...##.'], 13),
+                                                  (['##.#.#.',
+                                                    '#...##.',
+                                                    '..##.##',
+                                                    '..##.#.',
+                                                    '#...##.',
+                                                    '#..#..#',
+                                                    '#..#.##',
+                                                    '#..#.##',
+                                                    '#..#..#',
+                                                    '#...##.',
+                                                    '..##.#.',
+                                                    '..##.##',
+                                                    '#...##.'], 1100)])
+def test_find_smudge(test_input, expected):
+    # Given
+    # When
+    result = find_smudge(test_input)
     # Then
     assert result == expected
