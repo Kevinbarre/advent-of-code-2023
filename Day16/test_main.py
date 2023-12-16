@@ -1,7 +1,7 @@
 import pytest
 
 from main import part1, part2, parse_grid, Direction, step_beam, energize_grid, get_energized_count, \
-    get_beam_from_direction
+    get_beam_from_direction, get_max_energized_count
 
 filename = "example.txt"
 
@@ -23,7 +23,7 @@ def test_part2():
     # When
     result = part2(lines)
     # Then
-    assert result == 0
+    assert result == 51
 
 
 def test_parse_grid():
@@ -244,7 +244,7 @@ def test_energize_grid():
             "Z..//.|....Z",
             "ZZZZZZZZZZZZ"]
     # When
-    result = energize_grid(grid)
+    result = energize_grid(grid, (1, 1, Direction.RIGHT))
     # Then
     assert result == ["ZZZZZZZZZZZZ",
                       "Z######....Z",
@@ -278,3 +278,23 @@ def test_get_energized_count():
     result = get_energized_count(energized_grid)
     # Then
     assert result == 46
+
+
+def test_get_max_energized_count():
+    # Given
+    grid = ["ZZZZZZZZZZZZ",
+            "Z.|...\\....Z",
+            "Z|.-.\\.....Z",
+            "Z.....|-...Z",
+            "Z........|.Z",
+            "Z..........Z",
+            "Z.........\\Z",
+            "Z..../.\\\\..Z",
+            "Z.-.-/..|..Z",
+            "Z.|....-|.\\Z",
+            "Z..//.|....Z",
+            "ZZZZZZZZZZZZ"]
+    # When
+    result = get_max_energized_count(grid)
+    # Then
+    assert result == 51

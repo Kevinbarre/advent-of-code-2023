@@ -10,12 +10,13 @@ class Direction(Enum):
 
 def part1(lines):
     grid = parse_grid(lines)
-    energized_grid = energize_grid(grid)
+    energized_grid = energize_grid(grid, (1, 1, Direction.RIGHT))
     return get_energized_count(energized_grid)
 
 
 def part2(lines):
-    return 0
+    grid = parse_grid(lines)
+    return get_max_energized_count(grid)
 
 
 def parse_grid(lines):
@@ -81,10 +82,10 @@ def step_beam(grid, beam):
             return {get_beam_from_direction(j, i, Direction.UP)}
 
 
-def energize_grid(grid):
+def energize_grid(grid, initial_beam):
     energized_grid = [[char if char == 'Z' else '.' for char in row] for row in grid]
     beams_history = set()
-    beams = {(1, 1, Direction.RIGHT)}
+    beams = {initial_beam}
     while beams:
         new_beams = set()
         for beam in beams:
@@ -106,6 +107,17 @@ def energize_grid(grid):
 
 def get_energized_count(energized_grid):
     return sum(1 for row in energized_grid for char in row if char == '#')
+
+
+def get_max_energized_count(grid):
+    height = len(grid)
+    width = len(grid[0])
+    top_row = [(1, i, Direction.DOWN) for i in range(1, width - 1)]
+    bottom_row = [(height - 1, i, Direction.UP) for i in range(1, width - 1)]
+    leftmost_column = [(j, 1, Direction.RIGHT) for j in range(1, height - 1)]
+    rightmost_column = [(j, width - 1, Direction.LEFT) for j in range(1, height - 1)]
+    initial_beams = top_row + bottom_row + leftmost_column + rightmost_column
+    return max(get_energized_count(energize_grid(grid, initial_beam)) for initial_beam in initial_beams)
 
 
 if __name__ == '__main__':
