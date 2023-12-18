@@ -15,7 +15,9 @@ def part1(lines):
 
 
 def part2(lines):
-    return 0
+    heat_map = parse_heat_map(lines)
+    end_node = get_end_node(heat_map)
+    return ultra_dijkstra(heat_map, (1, 1), end_node)
 
 
 def parse_heat_map(lines):
@@ -72,6 +74,57 @@ def get_end_node(heat_map):
     end_j = len(heat_map) - 2
     end_i = len(heat_map[0]) - 2
     return end_j, end_i
+
+
+def get_ultra_neighbours(heat_map, position, direction_streak):
+    j, i = position
+    direction, streak = direction_streak
+    neighbours = set()
+    directions = list(DIRECTIONS)
+    if direction:
+        # Prevent reversing direction
+        directions.remove((-direction[0], -direction[1]))
+    if 0 < streak < 4:
+        # Between 1 and 3 steps in the same direction, need to continue in the same direction
+        directions = [direction]
+    elif streak == 10:
+        # 10 steps done in the same direction, need to turn
+        directions.remove(direction)
+
+    for new_direction in directions:
+        k, m = new_direction
+        y, x = j + k, i + m
+        if heat_map[y][x] != 'Z':
+            direction_count = 1
+            if new_direction == direction:
+                direction_count += streak
+            neighbours.add(((y, x), (new_direction, direction_count)))
+    return neighbours
+
+
+def ultra_dijkstra(heat_map, start, end):
+    distances = {(start, (None, 0)): 0}
+    next_cells = [(0, start, (None, 0), [])]
+    while next_cells:
+        cell_heat, cell_position, direction_streak, path = heapq.heappop(next_cells)
+        if cell_position == end:
+            if direction_streak[1] > 3:  # Done at least 4 steps before being allowed to stop
+                # End reached, can return
+                return cell_heat
+            else:
+                # End reached in less than 4 moves in the same direction, need to try another path
+                continue
+        neighbours = get_ultra_neighbours(heat_map, cell_position, direction_streak)
+        for neighbour, neighbour_direction_streak in neighbours:
+            j, i = neighbour
+            neighbour_distance = cell_heat + heat_map[j][i]
+            if neighbour_distance < distances.get((neighbour, neighbour_direction_streak), math.inf):
+                # Update known distances with the new one to neighbour from this direction & streak,
+                # if it's lower than existing one
+                distances[(neighbour, neighbour_direction_streak)] = neighbour_distance
+                # Add neighbour to next_cells with its current direction, streak, and path used to reach it
+                new_path = path + [(cell_position, direction_streak)]
+                heapq.heappush(next_cells, (neighbour_distance, neighbour, neighbour_direction_streak, new_path))
 
 
 if __name__ == '__main__':

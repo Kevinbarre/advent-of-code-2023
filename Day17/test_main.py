@@ -1,6 +1,7 @@
 import pytest
 
-from main import part1, part2, parse_heat_map, dijkstra, get_neighbours, DOWN, UP, LEFT, RIGHT, get_end_node
+from main import part1, part2, parse_heat_map, dijkstra, get_neighbours, DOWN, UP, LEFT, RIGHT, get_end_node, \
+    get_ultra_neighbours, ultra_dijkstra
 
 filename = "example.txt"
 
@@ -22,7 +23,7 @@ def test_part2():
     # When
     result = part2(lines)
     # Then
-    assert result == 0
+    assert result == 94
 
 
 def test_parse_heat_map():
@@ -183,3 +184,55 @@ def test_get_end_node():
     result = get_end_node(heat_map)
     # Then
     assert result == (5, 3)
+
+
+@pytest.mark.parametrize("position, direction_streak, expected", [
+    # Neutral position
+    ((3, 6), (None, 0), {((2, 6), (UP, 1)),
+                         ((4, 6), (DOWN, 1)),
+                         ((3, 5), (LEFT, 1)),
+                         ((3, 7), (RIGHT, 1))}),
+    # Start moving in a direction, need to continue in the same direction
+    ((3, 6), (UP, 1), {((2, 6), (UP, 2))}),
+    # Three steps in the same direction, need to continue at least one step further
+    ((3, 6), (RIGHT, 3), {((3, 7), (RIGHT, 4))}),
+    # Four steps in the same direction, now allowed to continue or to turn
+    ((3, 6), (RIGHT, 4), {((2, 6), (UP, 1)),
+                          ((4, 6), (DOWN, 1)),
+                          ((3, 7), (RIGHT, 5))}),
+    # Nine steps in the same direction, still allowed to continue or to turn
+    ((3, 6), (LEFT, 9), {((2, 6), (UP, 1)),
+                         ((4, 6), (DOWN, 1)),
+                         ((3, 5), (LEFT, 10))}),
+    # Ten steps in the same direction, need to turn
+    ((3, 6), (LEFT, 10), {((2, 6), (UP, 1)),
+                          ((4, 6), (DOWN, 1))}),
+])
+def test_get_ultra_neighbours(position, direction_streak, expected):
+    # Given
+    heat_map = [['Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z'],
+                ['Z', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 'Z'],
+                ['Z', 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 'Z'],
+                ['Z', 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 'Z'],
+                ['Z', 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 'Z'],
+                ['Z', 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 'Z'],
+                ['Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z']]
+    # When
+    result = get_ultra_neighbours(heat_map, position, direction_streak)
+    # Then
+    assert result == expected
+
+
+def test_ultra_dijkstra():
+    # Given
+    heat_map = [['Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z'],
+                ['Z', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 'Z'],
+                ['Z', 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 'Z'],
+                ['Z', 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 'Z'],
+                ['Z', 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 'Z'],
+                ['Z', 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 'Z'],
+                ['Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z']]
+    # When
+    result = ultra_dijkstra(heat_map, (1, 1), (5, 12))
+    # Then
+    assert result == 71
