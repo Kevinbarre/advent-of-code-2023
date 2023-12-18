@@ -29,7 +29,8 @@ def part1(lines):
 
 
 def part2(lines):
-    return 0
+    instructions = parse_true_instructions(lines)
+    return count_size_2(instructions)
 
 
 def parse_instructions(lines):
@@ -174,6 +175,52 @@ def count_size(trench):
             flood_fill(trench, (j, width - 1))
     # Count remaining borders and cells not flooded
     return sum(1 for row in trench for cell in row if cell in ('#', '.'))
+
+
+def parse_true_instructions(lines):
+    instructions = []
+    for line in lines:
+        _, _, raw_color = line.split()
+        raw_length, raw_direction = raw_color[2:-2], raw_color[-2]
+        match raw_direction:
+            case '0':
+                direction = RIGHT
+            case '1':
+                direction = DOWN
+            case '2':
+                direction = LEFT
+            case _:  # 3
+                direction = UP
+        instructions.append((direction, int(raw_length, 16), None))
+    return instructions
+
+
+def get_vertices_coordinates(instructions):
+    vertices_coordinates = []
+    current_point = (0, 0)
+    for direction, length, _ in instructions:
+        vertices_coordinates.append(current_point)
+        current_point = tuple(current_point[i] + direction[i] * length for i in (0, 1))
+    return vertices_coordinates
+
+
+def shoelace(vertices_coordinates):
+    area = 0
+    for i in range(len(vertices_coordinates)):  # Compute last member first
+        yi_1, xi_1 = vertices_coordinates[i - 1]
+        yi, xi = vertices_coordinates[i]
+        area += (xi_1 * yi - xi * yi_1)
+    return abs(area) / 2
+
+
+def get_perimeter(instructions):
+    return sum(length for _, length, _ in instructions)
+
+
+def count_size_2(instructions):
+    inner_area = int(shoelace(get_vertices_coordinates(instructions)))
+    boundary = get_perimeter(instructions)
+    return inner_area + boundary // 2 + 1
 
 
 if __name__ == '__main__':
