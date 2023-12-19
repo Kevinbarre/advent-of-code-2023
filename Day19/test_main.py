@@ -1,7 +1,8 @@
 import pytest
 
 from main import part1, part2, Part, parse_input, parse_raw_part, parse_raw_workflow, get_eval_workflow, process_part, \
-    get_accepted_parts, get_part_value
+    get_accepted_parts, get_part_value, PartRange, parse_raw_workflow_for_ranges, split_range, \
+    get_range_distinct_combinations, parse_input_2, get_accepted_ranges
 
 filename = "example.txt"
 
@@ -23,7 +24,7 @@ def test_part2():
     # When
     result = part2(lines)
     # Then
-    assert result == 0
+    assert result == 167409079868000
 
 
 def test_parse_input():
@@ -159,5 +160,219 @@ def test_get_part_value(test_input, expected):
     # Given
     # When
     result = get_part_value(test_input)
+    # Then
+    assert result == expected
+
+
+def test_parse_input_2():
+    # Given
+    lines = ["px{a<2006:qkq,m>2090:A,rfg}",
+             "pv{a>1716:R,A}",
+             "lnx{m>1548:A,A}",
+             "rfg{s<537:gd,x>2440:R,A}",
+             "qs{s>3448:A,lnx}",
+             "qkq{x<1416:A,crn}",
+             "crn{x>2662:A,R}",
+             "in{s<1351:px,qqz}",
+             "qqz{s>2770:qs,m<1801:hdj,R}",
+             "gd{a>3333:R,R}",
+             "hdj{m>838:A,pv}",
+             "",
+             "{x=787,m=2655,a=1222,s=2876}",
+             "{x=1679,m=44,a=2067,s=496}",
+             "{x=2036,m=264,a=79,s=2244}",
+             "{x=2461,m=1339,a=466,s=291}",
+             "{x=2127,m=1623,a=2188,s=1013}"]
+    # When
+    result = parse_input_2(lines)
+    # Then
+    assert result == {"px": "a<2006:qkq,m>2090:A,rfg",
+                      "pv": "a>1716:R,A",
+                      "lnx": "m>1548:A,A",
+                      "rfg": "s<537:gd,x>2440:R,A",
+                      "qs": "s>3448:A,lnx",
+                      "qkq": "x<1416:A,crn",
+                      "crn": "x>2662:A,R",
+                      "in": "s<1351:px,qqz",
+                      "qqz": "s>2770:qs,m<1801:hdj,R",
+                      "gd": "a>3333:R,R",
+                      "hdj": "m>838:A,pv"}
+
+
+def test_parse_raw_workflow_for_range():
+    # Given
+    raw_workflow = "s<1351:px,qqz"
+    part_ranges = {PartRange(1, 4000, 1, 4000, 1, 4000, 1, 4000)}
+    # When
+    result = parse_raw_workflow_for_ranges(raw_workflow, part_ranges)
+    # Then
+    assert result == {"px": {PartRange(1, 4000, 1, 4000, 1, 4000, 1, 1350)},
+                      "qqz": {PartRange(1, 4000, 1, 4000, 1, 4000, 1351, 4000)}}
+
+
+def test_parse_raw_workflow_for_multiple_ranges():
+    # Given
+    raw_workflow = "s<1351:px,qqz"
+    part_ranges = {PartRange(1, 2000, 1, 4000, 1, 4000, 1, 4000),
+                   PartRange(1, 4000, 1000, 3000, 1, 4000, 1, 4000)}
+    # When
+    result = parse_raw_workflow_for_ranges(raw_workflow, part_ranges)
+    # Then
+    assert result == {"px": {PartRange(1, 2000, 1, 4000, 1, 4000, 1, 1350),
+                             PartRange(1, 4000, 1000, 3000, 1, 4000, 1, 1350)},
+                      "qqz": {PartRange(1, 2000, 1, 4000, 1, 4000, 1351, 4000),
+                              PartRange(1, 4000, 1000, 3000, 1, 4000, 1351, 4000)}}
+
+
+def test_parse_raw_workflow_for_range_ignore_none():
+    # Given
+    raw_workflow = "s<1351:px,qqz"
+    part_ranges = {
+        # Fully matching range
+        PartRange(1, 4000, 1, 4000, 1, 4000, 1000, 1100),
+        # Nothing matching range
+        PartRange(1, 4000, 1, 4000, 1, 4000, 1400, 1500)}
+    # When
+    result = parse_raw_workflow_for_ranges(raw_workflow, part_ranges)
+    # Then
+    assert result == {"px": {PartRange(1, 4000, 1, 4000, 1, 4000, 1000, 1100)},
+                      "qqz": {PartRange(1, 4000, 1, 4000, 1, 4000, 1400, 1500)}}
+
+
+@pytest.mark.parametrize("attribute, condition, expected", [
+    ('x', '<', (PartRange(1, 1499, 1, 4000, 1, 4000, 1, 4000), PartRange(1500, 4000, 1, 4000, 1, 4000, 1, 4000))),
+    ('m', '<', (PartRange(1, 4000, 1, 1499, 1, 4000, 1, 4000), PartRange(1, 4000, 1500, 4000, 1, 4000, 1, 4000))),
+    ('a', '<', (PartRange(1, 4000, 1, 4000, 1, 1499, 1, 4000), PartRange(1, 4000, 1, 4000, 1500, 4000, 1, 4000))),
+    ('s', '<', (PartRange(1, 4000, 1, 4000, 1, 4000, 1, 1499), PartRange(1, 4000, 1, 4000, 1, 4000, 1500, 4000))),
+    ('x', '>', (PartRange(1501, 4000, 1, 4000, 1, 4000, 1, 4000), PartRange(1, 1500, 1, 4000, 1, 4000, 1, 4000))),
+    ('m', '>', (PartRange(1, 4000, 1501, 4000, 1, 4000, 1, 4000), PartRange(1, 4000, 1, 1500, 1, 4000, 1, 4000))),
+    ('a', '>', (PartRange(1, 4000, 1, 4000, 1501, 4000, 1, 4000), PartRange(1, 4000, 1, 4000, 1, 1500, 1, 4000))),
+    ('s', '>', (PartRange(1, 4000, 1, 4000, 1, 4000, 1501, 4000), PartRange(1, 4000, 1, 4000, 1, 4000, 1, 1500))),
+])
+def test_split_range(attribute, condition, expected):
+    # Given
+    value = 1500
+    part_range = PartRange(1, 4000, 1, 4000, 1, 4000, 1, 4000)
+    # When
+    result = split_range(attribute, condition, value, part_range)
+    # Then
+    assert result == expected
+
+
+@pytest.mark.parametrize("attribute, condition", [
+    ('x', '<'),
+    ('m', '<'),
+    ('a', '<'),
+    ('s', '<'),
+])
+def test_split_range_less_than_value_smaller_than_lower_bound(attribute, condition):
+    # Given
+    value = 1500
+    part_range = PartRange(2000, 4000, 2000, 4000, 2000, 4000, 2000, 4000)
+    # When
+    result = split_range(attribute, condition, value, part_range)
+    # Then
+    assert result == (None, part_range)
+
+
+@pytest.mark.parametrize("attribute, condition", [
+    ('x', '<'),
+    ('m', '<'),
+    ('a', '<'),
+    ('s', '<'),
+])
+def test_split_range_less_than_value_bigger_than_higher_bound(attribute, condition):
+    # Given
+    value = 1500
+    part_range = PartRange(1, 1000, 1, 1000, 1, 1000, 1, 1000)
+    # When
+    result = split_range(attribute, condition, value, part_range)
+    # Then
+    assert result == (part_range, None)
+
+
+@pytest.mark.parametrize("attribute, condition", [
+    ('x', '>'),
+    ('m', '>'),
+    ('a', '>'),
+    ('s', '>'),
+])
+def test_split_range_more_than_value_smaller_than_lower_bound(attribute, condition):
+    # Given
+    value = 1500
+    part_range = PartRange(2000, 4000, 2000, 4000, 2000, 4000, 2000, 4000)
+    # When
+    result = split_range(attribute, condition, value, part_range)
+    # Then
+    assert result == (part_range, None)
+
+
+@pytest.mark.parametrize("attribute, condition", [
+    ('x', '>'),
+    ('m', '>'),
+    ('a', '>'),
+    ('s', '>'),
+])
+def test_split_range_more_than_value_bigger_than_higher_bound(attribute, condition):
+    # Given
+    value = 1500
+    part_range = PartRange(1, 1000, 1, 1000, 1, 1000, 1, 1000)
+    # When
+    result = split_range(attribute, condition, value, part_range)
+    # Then
+    assert result == (None, part_range)
+
+
+@pytest.mark.parametrize("attribute, expected", [("x_min", PartRange(2000, 4000, 1, 4000, 1, 4000, 1, 4000)),
+                                                 ("x_max", PartRange(1, 2000, 1, 4000, 1, 4000, 1, 4000)),
+                                                 ("m_min", PartRange(1, 4000, 2000, 4000, 1, 4000, 1, 4000)),
+                                                 ("m_max", PartRange(1, 4000, 1, 2000, 1, 4000, 1, 4000)),
+                                                 ("a_min", PartRange(1, 4000, 1, 4000, 2000, 4000, 1, 4000)),
+                                                 ("a_max", PartRange(1, 4000, 1, 4000, 1, 2000, 1, 4000)),
+                                                 ("s_min", PartRange(1, 4000, 1, 4000, 1, 4000, 2000, 4000)),
+                                                 ("s_max", PartRange(1, 4000, 1, 4000, 1, 4000, 1, 2000)), ])
+def test_part_range_slice(attribute, expected):
+    # Given
+    part_range = PartRange(1, 4000, 1, 4000, 1, 4000, 1, 4000)
+    value = 2000
+    # When
+    result = part_range.slice(attribute, value)
+    # Then
+    assert result == expected
+
+
+def test_get_range_distinct_combinations():
+    # Given
+    part_range = PartRange(1, 5, 21, 30, 501, 800, 1, 4000)
+    # When
+    result = get_range_distinct_combinations(part_range)
+    # Then
+    assert result == 60000000  # 5*10*300*4000
+
+
+@pytest.mark.parametrize("test_input, expected", [
+    (PartRange(787, 787, 2655, 2655, 1222, 1222, 2876, 2876),
+     {PartRange(787, 787, 2655, 2655, 1222, 1222, 2876, 2876)}),
+    (PartRange(1679, 1679, 44, 44, 2067, 2067, 496, 496), set()),
+    (PartRange(2036, 2036, 264, 264, 79, 79, 2244, 2244),
+     {PartRange(2036, 2036, 264, 264, 79, 79, 2244, 2244)}),
+    (PartRange(2461, 2461, 1339, 1339, 466, 466, 291, 291), set()),
+    (PartRange(2127, 2127, 1623, 1623, 2188, 2188, 1013, 1013),
+     {PartRange(2127, 2127, 1623, 1623, 2188, 2188, 1013, 1013)})])
+def test_get_accepted_ranges(test_input, expected):
+    # Given
+    workflows = {"px": "a<2006:qkq,m>2090:A,rfg",
+                 "pv": "a>1716:R,A",
+                 "lnx": "m>1548:A,A",
+                 "rfg": "s<537:gd,x>2440:R,A",
+                 "qs": "s>3448:A,lnx",
+                 "qkq": "x<1416:A,crn",
+                 "crn": "x>2662:A,R",
+                 "in": "s<1351:px,qqz",
+                 "qqz": "s>2770:qs,m<1801:hdj,R",
+                 "gd": "a>3333:R,R",
+                 "hdj": "m>838:A,pv"}
+    # When
+    result = get_accepted_ranges(workflows, test_input)
     # Then
     assert result == expected
