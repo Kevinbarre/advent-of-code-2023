@@ -2,8 +2,8 @@ from collections import deque
 
 import pytest
 
-from main import part1, part2, Module, Signal, Broadcaster, FlipFlop, State, Conjunction, parse_modules, push_button, \
-    count_pulses
+from main import part1, Module, Signal, Broadcaster, FlipFlop, State, Conjunction, parse_modules, push_button, \
+    count_pulses, push_button_rx, count_min_rx_naive, count_steps_high
 
 filename = "example.txt"
 
@@ -20,13 +20,8 @@ def test_part1(test_input, expected):
 
 
 def test_part2():
-    # Given
-    with open(filename) as f:
-        lines = f.read().splitlines()
-    # When
-    result = part2(lines)
-    # Then
-    assert result == 0
+    # No tests here, because examples files do not have rx
+    assert True
 
 
 @pytest.mark.parametrize("test_input", [Signal.LOW, Signal.HIGH])
@@ -210,3 +205,66 @@ def test_count_pulses(test_input, expected):
     result = count_pulses(test_input, broadcaster)
     # Then
     assert result == expected
+
+
+def test_push_button_rx():
+    # Given
+    signal_queue = deque()
+    broadcaster = Broadcaster("broadcaster", signal_queue)
+    a = FlipFlop("a", signal_queue)
+    b = FlipFlop("b", signal_queue)
+    c = FlipFlop("c", signal_queue)
+    rx = Module("rx", signal_queue)
+    inv = Conjunction("inv", signal_queue)
+    broadcaster.init_destination_modules(a, b, c, rx)
+    a.init_destination_modules(b)
+    b.init_destination_modules(c)
+    c.init_destination_modules(inv)
+    inv.init_input_modules(c)
+    inv.init_destination_modules(a)
+    # When
+    result = push_button_rx(broadcaster)
+    # Then
+    assert result == 1
+
+
+def test_count_min_rx():
+    # Given
+    signal_queue = deque()
+    broadcaster = Broadcaster("broadcaster", signal_queue)
+    a = FlipFlop("a", signal_queue)
+    b = FlipFlop("b", signal_queue)
+    c = FlipFlop("c", signal_queue)
+    rx = Module("rx", signal_queue)
+    inv = Conjunction("inv", signal_queue)
+    broadcaster.init_destination_modules(a, b, c, rx)
+    a.init_destination_modules(b)
+    b.init_destination_modules(c)
+    c.init_destination_modules(inv)
+    inv.init_input_modules(c)
+    inv.init_destination_modules(a)
+    # When
+    result = count_min_rx_naive(broadcaster)
+    # Then
+    assert result == 1
+
+
+def test_count_steps_high():
+    # Given
+    signal_queue = deque()
+    broadcaster = Broadcaster("broadcaster", signal_queue)
+    a = FlipFlop("a", signal_queue)
+    b = FlipFlop("b", signal_queue)
+    c = FlipFlop("c", signal_queue)
+    rx = Module("rx", signal_queue)
+    inv = Conjunction("inv", signal_queue)
+    broadcaster.init_destination_modules(a, b, c, rx)
+    a.init_destination_modules(b)
+    b.init_destination_modules(c)
+    c.init_destination_modules(inv)
+    inv.init_input_modules(c)
+    inv.init_destination_modules(a)
+    # When
+    result = count_steps_high(broadcaster, "a")
+    # Then
+    assert result == 1

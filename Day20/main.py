@@ -9,7 +9,7 @@ def part1(lines):
 
 
 def part2(lines):
-    return 0
+    return count_min_rx(lines)
 
 
 class Signal(Enum):
@@ -170,6 +170,63 @@ def count_pulses(nb_cycles, broadcaster):
         total_low += low_pulses
         total_high += high_pulses
     return total_low * total_high
+
+
+def push_button_rx(broadcaster):
+    signal_queue = broadcaster.signal_queue
+    # Push button to send low signal to broadcaster
+    broadcaster.send_signal(Signal.LOW)
+    count_low_rx = 0
+    while signal_queue:
+        input_module, signal, destination_module = signal_queue.popleft()
+        destination_module.receive_signal(input_module, signal)
+        if signal == Signal.LOW and destination_module.name == "rx":
+            count_low_rx += 1
+    return count_low_rx
+
+
+def count_min_rx_naive(broadcaster):
+    nb_push_button = 1  # Account for first button pushed
+    while push_button_rx(broadcaster) != 1:
+        nb_push_button += 1
+    return nb_push_button
+
+
+def count_steps_high(broadcaster, target):
+    signal_queue = broadcaster.signal_queue
+    steps = 0
+    while True:
+        # Push button to send low signal to broadcaster
+        broadcaster.send_signal(Signal.LOW)
+        steps += 1
+        while signal_queue:
+            input_module, signal, destination_module = signal_queue.popleft()
+            destination_module.receive_signal(input_module, signal)
+            if signal == Signal.HIGH and input_module.name == target:
+                return steps
+
+
+def reset_modules(lines):
+    modules, flipflops = parse_modules(lines)
+    return modules["broadcaster"]
+
+
+# rx comes from conjunction qn
+# qn has the following input: qz, cq, jx, tt
+def count_min_rx(lines):
+    # Steps to get qz high
+    broadcaster = reset_modules(lines)
+    steps_qz = count_steps_high(broadcaster, "qz")
+    # Steps to get cq high
+    broadcaster = reset_modules(lines)
+    steps_cq = count_steps_high(broadcaster, "cq")
+    # Steps to get jx high
+    broadcaster = reset_modules(lines)
+    steps_jx = count_steps_high(broadcaster, "jx")
+    # Steps to get tt high
+    broadcaster = reset_modules(lines)
+    steps_tt = count_steps_high(broadcaster, "tt")
+    return steps_qz * steps_cq * steps_jx * steps_tt
 
 
 if __name__ == '__main__':
