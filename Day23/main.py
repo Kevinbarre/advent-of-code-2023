@@ -9,7 +9,11 @@ def part1(lines):
 
 
 def part2(lines):
-    return 0
+    trail = parse_trail(lines)
+    trail = remove_slopes(trail)
+    target_position = get_target_position(trail)
+    intersections = get_intersections(trail, target_position)
+    return get_longest_path_from_intersections(intersections, (1, 2), target_position)
 
 
 class Direction(NamedTuple):
@@ -78,6 +82,59 @@ def get_target_position(trail):
     height = len(trail)
     width = len(trail[0])
     return height - 2, width - 3
+
+
+def remove_slopes(trail):
+    return [row.replace('^', '.').replace('v', '.').replace('<', '.').replace('>', '.') for row in trail]
+
+
+def get_intersections(trail, target_position):
+    start = (1, 2)
+    second_position = (2, 2)
+    intersections = {}
+    remaining_intersections = {(start, second_position)}
+    while remaining_intersections:
+        intersection, next_position = remaining_intersections.pop()
+        path_length = 0
+        possible_paths = {(next_position, frozenset({intersection}))}
+        while True:
+            current_position, already_visited_cells = possible_paths.pop()
+            path_length += 1
+            if current_position == target_position:
+                # Found path to the end, stopping here
+                intersections.setdefault(intersection, set()).add((current_position, path_length))
+                break
+            possible_paths = navigate_trail(trail, current_position, already_visited_cells)
+            if len(possible_paths) != 1:
+                # Found an intersection, stopping here
+                # Record new path to this intersection
+                intersections.setdefault(intersection, set()).add((current_position, path_length))
+                if current_position not in intersections:
+                    # We've never visited this intersection before, try to visit each possible path
+                    for possible_path, _ in possible_paths:
+                        remaining_intersections.add((current_position, possible_path))
+                # Also add reverse path
+                intersections.setdefault(current_position, set()).add((intersection, path_length))
+                break
+    return intersections
+
+
+def get_longest_path_from_intersections(intersections, start, end):
+    longest_path = 0
+    possible_paths = {(start, 0, frozenset())}
+    while possible_paths:
+        intersection, path_length, visited_intersections = possible_paths.pop()
+        visited_intersections = visited_intersections.union({intersection})
+        for future_intersection, additional_path_length in intersections[intersection]:
+            new_length = path_length + additional_path_length
+            if future_intersection == end:
+                # Found a path to the end, check if it's currently the longest one
+                if new_length > longest_path:
+                    longest_path = new_length
+            else:
+                if future_intersection not in visited_intersections:
+                    possible_paths.add((future_intersection, new_length, visited_intersections))
+    return longest_path
 
 
 if __name__ == '__main__':
