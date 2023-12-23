@@ -6,8 +6,11 @@ def part1(lines, steps):
     return find_reachable_garden_plots(garden, starting_position, steps)
 
 
-def part2(lines):
-    return 0
+def part2(lines, steps):
+    garden_width = len(lines)
+    first_three_points = find_first_three_points(lines)
+    quadratic_coefficients = get_quadratic_coefficients(first_three_points)
+    return get_positions(quadratic_coefficients, garden_width, steps)
 
 
 class Direction(NamedTuple):
@@ -65,9 +68,56 @@ def find_reachable_garden_plots(garden, starting_position, steps):
     return len(even_positions) if steps % 2 == 0 else len(odd_positions)
 
 
+def expand_garden(lines, n):
+    garden_width = len(lines)
+    multiplier = 2 * n + 1
+    initial_starting_position = (0, 0)
+    # Replace starting position with a garden plot
+    for j, row in enumerate(lines):
+        if 'S' in row:
+            i = row.index('S')
+            lines[j] = row[:i] + '.' + row[i + 1:]
+            initial_starting_position = (i, j)
+    # Expand garden horizontally
+    garden = [row * multiplier for row in lines]
+    # Expand garden vertically
+    garden = garden * multiplier
+    return (initial_starting_position[0] + n * garden_width, initial_starting_position[1] + n * garden_width), garden
+
+
+def find_first_three_points(lines):
+    garden_width = len(lines)
+    start_position, garden = expand_garden(lines, 2)
+    first = find_reachable_garden_plots(garden, start_position, garden_width // 2)
+    second = find_reachable_garden_plots(garden, start_position, garden_width + garden_width // 2)
+    third = find_reachable_garden_plots(garden, start_position, 2 * garden_width + garden_width // 2)
+    return first, second, third
+
+
+def get_quadratic_coefficients(first_three_points):
+    first, second, third = first_three_points
+    # f(x) = a*x^2 + b*x + c
+    # f(1) = a + b + c
+    # f(2) = 4a + 2b + c
+    # f(3) = 9a + 3b + c
+    # a = (f(3) - 2*f(2) + f(1)) // 2 = (9a + 3b + c - 8a - 4b - 2c + a + b + c) // 2 = (2a +0b + 0c) // 2 = a
+    a = (third - 2 * second + first) // 2
+    # b = f(2) - f(1) - 3a = 4a + 2b + c -a -b -c -3a = 0a + b + 0c = b
+    b = (second - first - 3 * a)
+    # c = f(1) - a - b = a + b + c - a - b = 0a + 0b + c = c
+    c = first - a - b
+    return a, b, c
+
+
+def get_positions(quadratic_coefficients, garden_width, steps):
+    a, b, c = quadratic_coefficients
+    n = 1 + (steps - garden_width // 2) // garden_width
+    return a * n ** 2 + b * n + c
+
+
 if __name__ == '__main__':
     with open("input.txt") as f:
         f_lines = f.read().splitlines()
 
     print("Part 1 : ", part1(f_lines, 64))
-    print("Part 2 : ", part2(f_lines))
+    print("Part 2 : ", part2(f_lines, 26501365))
