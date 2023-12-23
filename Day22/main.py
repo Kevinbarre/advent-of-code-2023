@@ -1,3 +1,6 @@
+from collections import deque
+
+
 def part1(lines):
     bricks = parse_bricks(lines)
     bricks = sort_bricks_vertically(bricks)
@@ -6,7 +9,11 @@ def part1(lines):
 
 
 def part2(lines):
-    return 0
+    bricks = parse_bricks(lines)
+    bricks = sort_bricks_vertically(bricks)
+    settled_bricks = settle_bricks(bricks)
+    supported_brick_count = count_supported_bricks(settled_bricks)
+    return sum(supported_brick_count.values())
 
 
 class Brick:
@@ -106,6 +113,24 @@ def get_destructible_bricks(settled_bricks):
         if len(brick.supported_by) == 1:
             required_bricks.update(brick.supported_by)
     return {brick for brick in settled_bricks if brick not in required_bricks}
+
+
+def count_supported_bricks(settled_bricks):
+    return {brick: count_supported_brick(brick) for brick in settled_bricks}
+
+
+def count_supported_brick(brick):
+    # Initialize chain reaction
+    disintegrated_bricks = {brick}
+    bricks_to_check = deque()
+    bricks_to_check.extend(brick.supported_bricks)
+    while bricks_to_check:
+        checked_brick = bricks_to_check.pop()
+        if checked_brick.supported_by.issubset(disintegrated_bricks):
+            # Found a brick that would fall in the chain reaction
+            disintegrated_bricks.add(checked_brick)
+            bricks_to_check.extend(checked_brick.supported_bricks)
+    return len(disintegrated_bricks) - 1
 
 
 if __name__ == '__main__':

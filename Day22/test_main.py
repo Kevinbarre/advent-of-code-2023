@@ -1,7 +1,7 @@
 import pytest
 
 from main import part1, part2, parse_bricks, Brick, sort_bricks_vertically, fall_brick, settle_bricks, \
-    get_destructible_bricks
+    get_destructible_bricks, count_supported_bricks, count_supported_brick
 
 filename = "example.txt"
 
@@ -23,7 +23,7 @@ def test_part2():
     # When
     result = part2(lines)
     # Then
-    assert result == 0
+    assert result == 7
 
 
 def test_parse_bricks():
@@ -207,3 +207,80 @@ def test_get_destructible_bricks():
     result = get_destructible_bricks(settled_bricks)
     # Then
     assert result == {b, c, d, e, g}
+
+
+def test_count_supported_bricks():
+    # Given
+    a = Brick((1, 0, 1), (1, 2, 1))
+    b = Brick((0, 0, 2), (2, 0, 2))
+    c = Brick((0, 2, 2), (2, 2, 2))
+    d = Brick((0, 0, 3), (0, 2, 3))
+    e = Brick((2, 0, 3), (2, 2, 3))
+    f = Brick((0, 1, 4), (2, 1, 4))
+    g = Brick((1, 1, 5), (1, 1, 6))
+    # Supported bricks
+    a.supported_bricks = {b, c}
+    b.supported_bricks = {d, e}
+    c.supported_bricks = {d, e}
+    d.supported_bricks = {f}
+    e.supported_bricks = {f}
+    f.supported_bricks = {g}
+    g.supported_bricks = set()
+    # Supported by
+    a.supported_by = set()
+    b.supported_by = {a}
+    c.supported_by = {a}
+    d.supported_by = {b, c}
+    e.supported_by = {b, c}
+    f.supported_by = {d, e}
+    g.supported_by = {f}
+    settled_bricks = [a, b, c, d, e, f, g]
+    # When
+    result = count_supported_bricks(settled_bricks)
+    # Then
+    assert result == {
+        a: 6,
+        b: 0,
+        c: 0,
+        d: 0,
+        e: 0,
+        f: 1,
+        g: 0
+    }
+
+
+@pytest.mark.parametrize("test_input, expected", [("a", 6), ("b", 0), ("c", 0), ("d", 0), ("e", 0), ("f", 1), ("g", 0)])
+def test_count_supported_brick(test_input, expected):
+    # Given
+    a = Brick((1, 0, 1), (1, 2, 1))
+    b = Brick((0, 0, 2), (2, 0, 2))
+    c = Brick((0, 2, 2), (2, 2, 2))
+    d = Brick((0, 0, 3), (0, 2, 3))
+    e = Brick((2, 0, 3), (2, 2, 3))
+    f = Brick((0, 1, 4), (2, 1, 4))
+    g = Brick((1, 1, 5), (1, 1, 6))
+    # Supported bricks
+    a.supported_bricks = {b, c}
+    b.supported_bricks = {d, e}
+    c.supported_bricks = {d, e}
+    d.supported_bricks = {f}
+    e.supported_bricks = {f}
+    f.supported_bricks = {g}
+    g.supported_bricks = set()
+    # Supported by
+    a.supported_by = set()
+    b.supported_by = {a}
+    c.supported_by = {a}
+    d.supported_by = {b, c}
+    e.supported_by = {b, c}
+    f.supported_by = {d, e}
+    g.supported_by = {f}
+    bricks_by_name = {"a": a, "b": b, "c": c, "d": d, "e": e, "f": f, "g": g}
+    # When
+    result = count_supported_brick(bricks_by_name[test_input])
+    # Then
+    assert result == expected
+
+
+def test_something():
+    assert set().issubset(set())
