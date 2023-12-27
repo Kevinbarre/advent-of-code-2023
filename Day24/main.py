@@ -8,7 +8,9 @@ def part1(lines, min_boundary, max_boundary):
 
 
 def part2(lines):
-    return 0
+    hailstones = parse_hailstones(lines)
+    rock = get_rock(hailstones)
+    return rock.px + rock.py + rock.pz
 
 
 class Hailstone:
@@ -66,6 +68,49 @@ def parse_hailstones(lines):
         vx, vy, vz = map(int, raw_velocity.split(", "))
         hailstones.append(Hailstone(px, py, pz, vx, vy, vz))
     return hailstones
+
+
+def shift_hailstones(hailstones):
+    """Shift positions and speeds in the reference system of the first hailstone in the list"""
+    new_reference = hailstones[0]
+    return [Hailstone(hailstone.px - new_reference.px, hailstone.py - new_reference.py, hailstone.pz - new_reference.pz,
+                      hailstone.vx - new_reference.vx, hailstone.vy - new_reference.vy, hailstone.vz - new_reference.vz)
+            for hailstone in hailstones], new_reference
+
+
+def get_normal_vector(hailstone):
+    """Get normal vector defined by the positions of hailstone at t0 and t1"""
+    u = (hailstone.px, hailstone.py, hailstone.pz)  # u = (u0, u1, u2)
+    v = (hailstone.px + hailstone.vx, hailstone.py + hailstone.vy, hailstone.pz + hailstone.vz)  # v = (v0, v1, v2)
+    # u ∧ v = (u1v2 - u2v1, u2v0 - u0v2, u0v1 - u1v0)
+    return u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]
+
+
+def get_scalar_product(hailstone_speed, normal):
+    return hailstone_speed[0] * normal[0] + hailstone_speed[1] * normal[1] + hailstone_speed[2] * normal[2]
+
+
+def intersect_plane(hailstone, normal):
+    scalar_position = get_scalar_product((-hailstone.px, -hailstone.py, -hailstone.pz), normal)
+    scalar_speed = get_scalar_product((hailstone.vx, hailstone.vy, hailstone.vz), normal)
+    time = scalar_position // scalar_speed
+    position = (
+        hailstone.px + hailstone.vx * time, hailstone.py + hailstone.vy * time, hailstone.pz + hailstone.vz * time)
+    return position, time
+
+
+def get_rock(hailstones):
+    shifted_hailstones, new_reference = shift_hailstones(hailstones)
+    normal = get_normal_vector(shifted_hailstones[1])
+    position_2, time_2 = intersect_plane(shifted_hailstones[2], normal)
+    position_3, time_3 = intersect_plane(shifted_hailstones[3], normal)
+    time_difference = time_2 - time_3
+    rock_speed = tuple((position_2[i] - position_3[i]) // time_difference for i in range(3))
+    rock_position = tuple(position_2[i] - rock_speed[i] * time_2 for i in range(3))
+    # Shift back rock into original coordinates reference
+    return Hailstone(rock_position[0] + new_reference.px, rock_position[1] + new_reference.py,
+                     rock_position[2] + new_reference.pz, rock_speed[0] + new_reference.vx,
+                     rock_speed[1] + new_reference.vy, rock_speed[2] + new_reference.vz)
 
 
 if __name__ == '__main__':
